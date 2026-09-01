@@ -1,0 +1,15 @@
+{
+  "name": "eterna-test-stockflow",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "yarn@1.22.22",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:frontend": "yarn workspace @stockflow/frontend dev",
+    "dev:backend": "yarn workspace @stockflow/backend start:dev",
+    "build": "yarn workspaces run build",
+    "lint": "yarn workspaces run lint"
+  }
+}
