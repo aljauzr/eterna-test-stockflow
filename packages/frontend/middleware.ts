@@ -8,6 +8,10 @@ function hasAuthCookie(request: NextRequest) {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuthenticated = hasAuthCookie(request);
+  const isProtectedRoute =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/inventory") ||
+    pathname.startsWith("/invoice");
 
   if (pathname === "/") {
     const redirectUrl = request.nextUrl.clone();
@@ -15,7 +19,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (pathname.startsWith("/dashboard") && !isAuthenticated) {
+  if (isProtectedRoute && !isAuthenticated) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     return NextResponse.redirect(redirectUrl);
@@ -31,5 +35,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/dashboard/:path*", "/login", "/register"],
+  matcher: ["/", "/dashboard/:path*", "/inventory/:path*", "/invoice/:path*", "/login", "/register"],
 };

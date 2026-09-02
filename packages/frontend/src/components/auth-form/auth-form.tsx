@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { ApiError, apiRequest } from "../lib/api";
-import { getStoredAccessToken, setStoredAuthSession } from "../lib/auth-storage";
+import { ApiError, apiRequest } from "../../lib/api";
+import { getStoredAccessToken, setStoredAuthSession } from "../../lib/auth-storage";
+import styles from "./auth-form.module.css";
 
 type AuthMode = "login" | "register";
 
@@ -48,7 +49,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     if (mode === "register") {
       return {
         title: "Create your account",
-        description: "Register a workspace owner account to start using StockFlow.",
+        description: "Set up your account and start managing products and invoices.",
         submitLabel: "Create Account",
         alternateLabel: "Already have an account?",
         alternateLinkText: "Sign in",
@@ -58,7 +59,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     return {
       title: "Welcome back",
-      description: "Sign in with your email and password to continue.",
+      description: "Use your existing account to enter the StockFlow dashboard.",
       submitLabel: "Sign In",
       alternateLabel: "Need an account?",
       alternateLinkText: "Create one",
@@ -103,26 +104,22 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <div className="auth-shell">
-      <div className="auth-grid">
-        <section className="auth-panel">
-          <div className="auth-panel__header">
-            <div className="auth-brand">
-              <span className="auth-brand__badge">StockFlow</span>
+    <div className={styles.shell}>
+      <div className={styles.grid}>
+        <section className={styles.panel}>
+          <div className={styles.header}>
+            <div className={styles.brand}>
+              <span className={styles.badge}>StockFlow</span>
             </div>
-            <h2 className="auth-panel__title">{content.submitLabel}</h2>
-            <p className="auth-panel__description">
-              {mode === "register"
-                ? "Set up your owner account and start managing products and invoices."
-                : "Use your existing account to enter the StockFlow dashboard."}
-            </p>
+            <h1 className={styles.title}>{content.title}</h1>
+            <p className={styles.description}>{content.description}</p>
           </div>
 
-          <form className="auth-form" onSubmit={handleSubmit}>
-            <label className="auth-field">
-              <span className="auth-label">Email</span>
+          <form className={styles.form} onSubmit={handleSubmit}>
+            <label className={styles.field}>
+              <span className={styles.label}>Email</span>
               <input
-                className="auth-input"
+                className={styles.input}
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -130,15 +127,13 @@ export function AuthForm({ mode }: AuthFormProps) {
                 autoComplete="email"
                 required
               />
-              {fieldErrors.email ? (
-                <span className="auth-field-error">{fieldErrors.email}</span>
-              ) : null}
+              {fieldErrors.email ? <span className={styles.fieldError}>{fieldErrors.email}</span> : null}
             </label>
 
-            <label className="auth-field">
-              <span className="auth-label">Password</span>
+            <label className={styles.field}>
+              <span className={styles.label}>Password</span>
               <input
-                className="auth-input"
+                className={styles.input}
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -147,20 +142,20 @@ export function AuthForm({ mode }: AuthFormProps) {
                 required
               />
               {fieldErrors.password ? (
-                <span className="auth-field-error">{fieldErrors.password}</span>
+                <span className={styles.fieldError}>{fieldErrors.password}</span>
               ) : null}
             </label>
 
-            {formError ? <div className="auth-form-error">{formError}</div> : null}
+            {formError ? <div className={styles.formError}>{formError}</div> : null}
 
-            <button className="auth-submit" type="submit" disabled={isSubmitting}>
+            <button className={styles.submit} type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Submitting..." : content.submitLabel}
             </button>
           </form>
 
-          <p className="auth-footer">
+          <p className={styles.footer}>
             {content.alternateLabel}{" "}
-            <Link className="auth-footer__link" href={content.alternateHref}>
+            <Link className={styles.footerLink} href={content.alternateHref}>
               {content.alternateLinkText}
             </Link>
           </p>
