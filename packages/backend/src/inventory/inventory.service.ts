@@ -97,6 +97,21 @@ export class InventoryService {
     };
   }
 
+  async catalog(userId: string) {
+    const products = await this.productModel
+      .find({
+        ownerId: new Types.ObjectId(userId),
+      })
+      .sort({ name: 1, sku: 1, _id: 1 });
+
+    return {
+      success: true,
+      data: {
+        items: products.map((product) => this.toProductResponse(product)),
+      },
+    };
+  }
+
   async getSuggestedSku(userId: string) {
     const products = await this.productModel
       .find({

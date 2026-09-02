@@ -1,0 +1,301 @@
+.page {
+  min-height: 100vh;
+  padding: 32px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.toolbar,
+.toolbarActions,
+.sectionHeader,
+.headerActions,
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filterField {
+  display: grid;
+  gap: 8px;
+}
+
+.filterLabel,
+.sectionDescription,
+.emptyState,
+.paginationInfo {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.filterLabel {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.filterSelect {
+  min-width: 220px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 13px 14px;
+  background: #fff;
+  color: var(--foreground);
+}
+
+.filterSelect:focus {
+  outline: 2px solid rgba(23, 92, 211, 0.18);
+  border-color: var(--primary);
+}
+
+.addButton,
+.secondaryButton,
+.paginationButton,
+.tableButton,
+.tableDangerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.addButton,
+.paginationButton,
+.tableButton {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.addButton:hover,
+.paginationButton:hover,
+.tableButton:hover {
+  background: #3474de;
+  border-color: #3474de;
+}
+
+.secondaryButton {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: #c7d7fe;
+}
+
+.secondaryButton:hover {
+  background: #f7faff;
+}
+
+.tableDangerButton {
+  background: #fef3f2;
+  color: #b42318;
+  border-color: #fecdca;
+}
+
+.tableDangerButton:hover {
+  background: #fee4e2;
+  border-color: #fda29b;
+}
+
+.errorBanner,
+.successBanner {
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.errorBanner {
+  border: 1px solid #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.successBanner {
+  border: 1px solid #abefc6;
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.listSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 24px;
+}
+
+.sectionDescription {
+  margin: 0;
+}
+
+.tableWrapper {
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 1020px;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.tableHead,
+.tableCell {
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tableHead {
+  background: #f8fafc;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.tableHead:first-child {
+  border-top-left-radius: 18px;
+}
+
+.tableHead:last-child {
+  border-top-right-radius: 18px;
+}
+
+.tableRow:last-child .tableCell {
+  border-bottom: none;
+}
+
+.tableHeadRight,
+.tableCellRight {
+  text-align: right;
+}
+
+.tableHead:nth-child(1),
+.tableCell:nth-child(1) {
+  width: 170px;
+}
+
+.tableHead:nth-child(2),
+.tableCell:nth-child(2) {
+  width: 190px;
+}
+
+.tableHead:nth-child(3),
+.tableCell:nth-child(3),
+.tableHead:nth-child(4),
+.tableCell:nth-child(4) {
+  width: 140px;
+}
+
+.tableHead:nth-child(5),
+.tableCell:nth-child(5) {
+  width: 120px;
+}
+
+.tableHead:nth-child(6),
+.tableCell:nth-child(6) {
+  width: 110px;
+}
+
+.tableHead:nth-child(7),
+.tableCell:nth-child(7) {
+  width: 180px;
+}
+
+.invoiceNumber,
+.customerName {
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.statusDraft {
+  background: #f5f8ff;
+  color: var(--primary);
+}
+
+.statusIssued {
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.statusPaid {
+  background: #eff8ff;
+  color: #175cd3;
+}
+
+.statusCancelled {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.rowActions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.emptyState {
+  display: grid;
+  place-items: center;
+  flex: 1;
+  min-height: 180px;
+  text-align: center;
+  border-radius: 18px;
+  padding: 24px;
+}
+
+.pagination {
+  justify-content: center;
+  margin-top: auto;
+}
+
+.addButton:disabled,
+.secondaryButton:disabled,
+.paginationButton:disabled,
+.tableButton:disabled,
+.tableDangerButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 24px;
+  }
+
+  .listSection {
+    padding: 20px;
+  }
+}
