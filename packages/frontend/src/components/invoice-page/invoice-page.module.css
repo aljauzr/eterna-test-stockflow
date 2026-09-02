@@ -23,6 +23,12 @@
   gap: 8px;
 }
 
+.toolbarSkeleton,
+.sectionHeaderSkeleton {
+  display: grid;
+  gap: 10px;
+}
+
 .filterLabel,
 .sectionDescription,
 .emptyState,
@@ -276,6 +282,81 @@
   padding: 24px;
 }
 
+.skeletonTable {
+  display: grid;
+  gap: 14px;
+}
+
+.skeletonRow {
+  display: grid;
+  grid-template-columns: 160px 180px 120px 120px 110px 120px 120px;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.skeletonBlock {
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #eef2f6 0%, #f8fafc 50%, #eef2f6 100%);
+  background-size: 200% 100%;
+  animation: invoiceSkeletonPulse 1.2s ease-in-out infinite;
+}
+
+.skeletonLabel {
+  width: 110px;
+  height: 14px;
+  border-radius: 8px;
+}
+
+.skeletonInput {
+  width: 220px;
+  height: 44px;
+}
+
+.skeletonTitle {
+  width: 170px;
+  height: 20px;
+  border-radius: 10px;
+}
+
+.skeletonText {
+  width: 240px;
+  height: 14px;
+  border-radius: 8px;
+}
+
+.skeletonButton {
+  width: 130px;
+  height: 44px;
+}
+
+.skeletonCellShort {
+  width: 80px;
+  height: 16px;
+}
+
+.skeletonCellMedium {
+  width: 120px;
+  height: 16px;
+}
+
+.skeletonCellAction {
+  width: 100px;
+  height: 40px;
+}
+
+@keyframes invoiceSkeletonPulse {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 .pagination {
   justify-content: center;
   margin-top: auto;
@@ -297,5 +378,9 @@
 
   .listSection {
     padding: 20px;
+  }
+
+  .skeletonRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

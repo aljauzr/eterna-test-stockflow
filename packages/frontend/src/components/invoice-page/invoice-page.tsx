@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ApiError, apiRequest } from "../../lib/api";
 import { getStoredAccessToken } from "../../lib/auth-storage";
 import { DashboardShell } from "../dashboard-shell/dashboard-shell";
@@ -134,6 +134,8 @@ function getStatusClassName(status: InvoiceStatus) {
 
 export function InvoicePageContent() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [invoices, setInvoices] = useState<InvoiceSummary[]>([]);
   const [pagination, setPagination] = useState(emptyPagination);
   const [statusFilter, setStatusFilter] = useState("");
@@ -155,6 +157,8 @@ export function InvoicePageContent() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [detailActionError, setDetailActionError] = useState("");
+  const [hasHydrated, setHasHydrated] = useState(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   const isEditing = editingInvoiceId !== null;
 
@@ -206,6 +210,7 @@ export function InvoicePageContent() {
         );
       } finally {
         setIsLoading(false);
+        setHasLoadedOnce(true);
       }
     },
     [getAuthHeaders, router],
@@ -241,6 +246,10 @@ export function InvoicePageContent() {
   }, [getAuthHeaders, router]);
 
   useEffect(() => {
+    setHasHydrated(true);
+  }, []);
+
+  useEffect(() => {
     void Promise.all([loadInvoices(1, ""), loadProductCatalog()]);
   }, [loadInvoices, loadProductCatalog]);
 
@@ -251,12 +260,25 @@ export function InvoicePageContent() {
     setEditingInvoiceId(null);
   }
 
-  function openCreateDrawer() {
+  const openCreateDrawer = useCallback(() => {
     resetFormState();
     setActionError("");
     setActionMessage("");
     setIsFormOpen(true);
-  }
+  }, []);
+
+  useEffect(() => {
+    if (searchParams.get("drawer") !== "create") {
+      return;
+    }
+
+    openCreateDrawer();
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete("drawer");
+    const nextUrl = nextParams.toString() ? `${pathname}?${nextParams.toString()}` : pathname;
+    router.replace(nextUrl);
+  }, [openCreateDrawer, pathname, router, searchParams]);
 
   function closeFormDrawer() {
     resetFormState();
@@ -521,71 +543,110 @@ export function InvoicePageContent() {
 
     return appliedStatus;
   }, [appliedStatus]);
+  const showInitialSkeleton = !hasHydrated || (!hasLoadedOnce && isLoading);
 
   return (
     <DashboardShell>
       <main className={styles.page}>
-        <section className={styles.toolbar}>
-          <label className={styles.filterField}>
-            <span className={styles.filterLabel}>Filter by status</span>
-            <select
-              className={styles.filterSelect}
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-            >
-              <option value="">All statuses</option>
-              <option value="DRAFT">Draft</option>
-              <option value="ISSUED">Issued</option>
-              <option value="PAID">Paid</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
-          </label>
+        {showInitialSkeleton ? (
+          <section className={styles.toolbar}>
+            <div className={styles.toolbarSkeleton}>
+              <span className={`${styles.skeletonBlock} ${styles.skeletonLabel}`} />
+              <span className={`${styles.skeletonBlock} ${styles.skeletonInput}`} />
+            </div>
+            <span className={`${styles.skeletonBlock} ${styles.skeletonButton}`} />
+          </section>
+        ) : (
+          <section className={styles.toolbar}>
+            <label className={styles.filterField}>
+              <span className={styles.filterLabel}>Filter by status</span>
+              <select
+                className={styles.filterSelect}
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value)}
+              >
+                <option value="">All statuses</option>
+                <option value="DRAFT">Draft</option>
+                <option value="ISSUED">Issued</option>
+                <option value="PAID">Paid</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </label>
 
-          <div className={styles.toolbarActions}>
-            <button
-              className={styles.addButton}
-              type="button"
-              onClick={() => void loadInvoices(1, statusFilter)}
-            >
-              Apply Filter
-            </button>
-          </div>
-        </section>
+            <div className={styles.toolbarActions}>
+              <button
+                className={styles.addButton}
+                type="button"
+                onClick={() => void loadInvoices(1, statusFilter)}
+              >
+                Apply Filter
+              </button>
+            </div>
+          </section>
+        )}
 
         {actionMessage ? <div className={styles.successBanner}>{actionMessage}</div> : null}
         {actionError ? <div className={styles.errorBanner}>{actionError}</div> : null}
 
         <section className={styles.listSection}>
-          <div className={styles.sectionHeader}>
-            <div>
-              <h2 className={styles.sectionTitle}>Invoices</h2>
-              <p className={styles.sectionDescription}>
-                {pagination.totalItems} invoice{pagination.totalItems === 1 ? "" : "s"} found in{" "}
-                {statusSummary}.
-              </p>
+          {showInitialSkeleton ? (
+            <>
+              <div className={styles.sectionHeader}>
+                <div className={styles.sectionHeaderSkeleton}>
+                  <span className={`${styles.skeletonBlock} ${styles.skeletonTitle}`} />
+                  <span className={`${styles.skeletonBlock} ${styles.skeletonText}`} />
+                </div>
+                <span className={`${styles.skeletonBlock} ${styles.skeletonButton}`} />
+              </div>
+
+              <div className={styles.tableWrapper}>
+                <div className={styles.skeletonTable}>
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div key={`invoice-skeleton-${index}`} className={styles.skeletonRow}>
+                      <span className={`${styles.skeletonBlock} ${styles.skeletonCellMedium}`} />
+                      <span className={`${styles.skeletonBlock} ${styles.skeletonCellMedium}`} />
+                      <span className={`${styles.skeletonBlock} ${styles.skeletonCellShort}`} />
+                      <span className={`${styles.skeletonBlock} ${styles.skeletonCellShort}`} />
+                      <span className={`${styles.skeletonBlock} ${styles.skeletonCellShort}`} />
+                      <span className={`${styles.skeletonBlock} ${styles.skeletonCellMedium}`} />
+                      <span className={`${styles.skeletonBlock} ${styles.skeletonCellAction}`} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>Invoices</h2>
+                <p className={styles.sectionDescription}>
+                  {pagination.totalItems} invoice{pagination.totalItems === 1 ? "" : "s"} found in{" "}
+                  {statusSummary}.
+                </p>
+              </div>
+
+              <div className={styles.headerActions}>
+                <button
+                  className={styles.addButton}
+                  type="button"
+                  onClick={openCreateDrawer}
+                  disabled={isLoadingCatalog}
+                >
+                  Create Invoice
+                </button>
+              </div>
             </div>
+          )}
 
-            <div className={styles.headerActions}>
-              <button
-                className={styles.addButton}
-                type="button"
-                onClick={openCreateDrawer}
-                disabled={isLoadingCatalog}
-              >
-                Create Invoice
-              </button>
-            </div>
-          </div>
+          {!showInitialSkeleton && isLoading ? <div className={styles.emptyState}>Loading invoices...</div> : null}
 
-          {isLoading ? <div className={styles.emptyState}>Loading invoices...</div> : null}
-
-          {!isLoading && invoices.length === 0 ? (
+          {!showInitialSkeleton && !isLoading && invoices.length === 0 ? (
             <div className={styles.emptyState}>
               No invoices yet. Create your first invoice to start tracking customer billing.
             </div>
           ) : null}
 
-          {!isLoading && invoices.length > 0 ? (
+          {!showInitialSkeleton && !isLoading && invoices.length > 0 ? (
             <div className={styles.tableWrapper}>
               <table className={styles.table}>
                 <thead>

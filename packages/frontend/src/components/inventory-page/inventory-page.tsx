@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ApiError, apiRequest } from "../../lib/api";
 import { getStoredAccessToken } from "../../lib/auth-storage";
 import { DashboardShell } from "../dashboard-shell/dashboard-shell";
@@ -21,6 +21,8 @@ type Product = {
   description: string;
   unitPrice: number;
   quantityOnHand: number;
+  canDelete: boolean;
+  deleteDisabledReason: string | null;
   createdAt: string | null;
   updatedAt: string | null;
 };
@@ -107,6 +109,8 @@ function getNextSequentialSku(skus: string[]) {
 
 export function InventoryPageContent() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [pagination, setPagination] = useState(emptyPagination);
   const [searchInput, setSearchInput] = useState("");
@@ -123,6 +127,9 @@ export function InventoryPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [productPendingDelete, setProductPendingDelete] = useState<Product | null>(null);
+  const [activeDeleteTooltipId, setActiveDeleteTooltipId] = useState<string | null>(null);
+  const [hasHydrated, setHasHydrated] = useState(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const closeDrawerTimeoutRef = useRef<number | null>(null);
 
   const numberFormatter = useMemo(
@@ -193,10 +200,15 @@ export function InventoryPageContent() {
         );
       } finally {
         setIsLoading(false);
+        setHasLoadedOnce(true);
       }
     },
     [getAuthHeaders, router],
   );
+
+  useEffect(() => {
+    setHasHydrated(true);
+  }, []);
 
   useEffect(() => {
     void loadProducts(1, "");
@@ -260,29 +272,42 @@ export function InventoryPageContent() {
     setEditingProductId(null);
   }
 
-  function clearCloseDrawerTimeout() {
+  const clearCloseDrawerTimeout = useCallback(() => {
     if (closeDrawerTimeoutRef.current) {
       window.clearTimeout(closeDrawerTimeoutRef.current);
       closeDrawerTimeoutRef.current = null;
     }
-  }
+  }, []);
 
-  function openFormDrawer() {
+  const openFormDrawer = useCallback(() => {
     clearCloseDrawerTimeout();
     setIsFormOpen(true);
 
     window.requestAnimationFrame(() => {
       setIsFormVisible(true);
     });
-  }
+  }, [clearCloseDrawerTimeout]);
 
-  async function openCreateForm() {
+  const openCreateForm = useCallback(async () => {
     const suggestedSku = await loadSuggestedSku();
     resetFormState(resolveSuggestedSku(suggestedSku));
     setActionMessage("");
     setActionError("");
     openFormDrawer();
-  }
+  }, [loadSuggestedSku, openFormDrawer, resolveSuggestedSku]);
+
+  useEffect(() => {
+    if (searchParams.get("drawer") !== "create") {
+      return;
+    }
+
+    void openCreateForm();
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete("drawer");
+    const nextUrl = nextParams.toString() ? `${pathname}?${nextParams.toString()}` : pathname;
+    router.replace(nextUrl);
+  }, [openCreateForm, pathname, router, searchParams]);
 
   function closeForm() {
     clearCloseDrawerTimeout();
@@ -386,6 +411,7 @@ export function InventoryPageContent() {
 
   function openDeleteDialog(product: Product) {
     setProductPendingDelete(product);
+    setActiveDeleteTooltipId(null);
     setActionMessage("");
     setActionError("");
   }
@@ -458,6 +484,8 @@ export function InventoryPageContent() {
     }));
   }
 
+  const showInitialSkeleton = !hasHydrated || (!hasLoadedOnce && isLoading);
+
   return (
     <DashboardShell>
       <main className={styles.page}>
@@ -496,25 +524,54 @@ export function InventoryPageContent() {
         {actionError ? <div className={styles.errorBanner}>{actionError}</div> : null}
 
         <section className={styles.listSection}>
-          <div className={styles.sectionHeader}>
-            <div>
-              <h2 className={styles.sectionTitle}>Products</h2>
-              <p className={styles.sectionDescription}>
-                {pagination.totalItems} product{pagination.totalItems === 1 ? "" : "s"} found
-                {appliedSearch ? ` for "${appliedSearch}"` : ""}.
-              </p>
-            </div>
+          {showInitialSkeleton ? (
+            <>
+              <div className={styles.sectionHeader}>
+                <div className={styles.sectionHeaderSkeleton}>
+                  <span className={`${styles.skeletonBlock} ${styles.skeletonTitle}`} />
+                  <span className={`${styles.skeletonBlock} ${styles.skeletonText}`} />
+                </div>
+                <span className={`${styles.skeletonBlock} ${styles.skeletonButton}`} />
+              </div>
 
-            <div className={styles.headerActions}>
-              <button className={styles.addButton} type="button" onClick={() => void openCreateForm()}>
-                Add Product
-              </button>
-            </div>
-          </div>
+              <div className={styles.tableWrapper}>
+                <div className={styles.skeletonTable}>
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div key={`inventory-skeleton-${index}`} className={styles.skeletonRow}>
+                      <span className={`${styles.skeletonBlock} ${styles.skeletonCellShort}`} />
+                      <span className={`${styles.skeletonBlock} ${styles.skeletonCellMedium}`} />
+                      <span className={`${styles.skeletonBlock} ${styles.skeletonCellLong}`} />
+                      <span className={`${styles.skeletonBlock} ${styles.skeletonCellMedium}`} />
+                      <span className={`${styles.skeletonBlock} ${styles.skeletonCellShort}`} />
+                      <span className={`${styles.skeletonBlock} ${styles.skeletonCellAction}`} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={styles.sectionHeader}>
+                <div>
+                  <h2 className={styles.sectionTitle}>Products</h2>
+                  <p className={styles.sectionDescription}>
+                    {pagination.totalItems} product{pagination.totalItems === 1 ? "" : "s"} found
+                    {appliedSearch ? ` for "${appliedSearch}"` : ""}.
+                  </p>
+                </div>
 
-          {isLoading ? <div className={styles.emptyState}>Loading products...</div> : null}
+                <div className={styles.headerActions}>
+                  <button className={styles.addButton} type="button" onClick={() => void openCreateForm()}>
+                    Add Product
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
 
-          {!isLoading && products.length === 0 ? (
+          {!showInitialSkeleton && isLoading ? <div className={styles.emptyState}>Loading products...</div> : null}
+
+          {!showInitialSkeleton && !isLoading && products.length === 0 ? (
             <div className={styles.emptyState}>
               {appliedSearch
                 ? "No products match your current search."
@@ -522,7 +579,7 @@ export function InventoryPageContent() {
             </div>
           ) : null}
 
-          {!isLoading && products.length > 0 ? (
+          {!showInitialSkeleton && !isLoading && products.length > 0 ? (
             <div className={styles.tableWrapper}>
               <table className={styles.table}>
                 <thead>
@@ -560,14 +617,64 @@ export function InventoryPageContent() {
                           >
                             Update
                           </button>
-                          <button
-                            className={`${styles.cardButton} ${styles.cardButtonDanger}`}
-                            type="button"
-                            onClick={() => openDeleteDialog(product)}
-                            disabled={deletingProductId === product.id}
-                          >
-                            {deletingProductId === product.id ? "Deleting..." : "Delete"}
-                          </button>
+                          {(() => {
+                            const canDelete = product.canDelete !== false;
+                            const deleteDisabledReason = canDelete
+                              ? ""
+                              : "Already linked to an invoice.";
+
+                            return (
+                              <div
+                                className={`${styles.deleteActionWrapper}${canDelete ? "" : ` ${styles.deleteActionWrapperDisabled}`}`}
+                                onMouseEnter={() => {
+                                  if (!canDelete) {
+                                    setActiveDeleteTooltipId(product.id);
+                                  }
+                                }}
+                                onMouseLeave={() => {
+                                  if (!canDelete) {
+                                    setActiveDeleteTooltipId((current) =>
+                                      current === product.id ? null : current,
+                                    );
+                                  }
+                                }}
+                                onFocus={() => {
+                                  if (!canDelete) {
+                                    setActiveDeleteTooltipId(product.id);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (!canDelete) {
+                                    setActiveDeleteTooltipId((current) =>
+                                      current === product.id ? null : current,
+                                    );
+                                  }
+                                }}
+                              >
+                            <button
+                              className={`${styles.cardButton} ${styles.cardButtonDanger}${canDelete ? "" : ` ${styles.cardButtonMuted}`}`}
+                              type="button"
+                              onClick={() => {
+                                if (canDelete) {
+                                  openDeleteDialog(product);
+                                }
+                              }}
+                              disabled={!canDelete || deletingProductId === product.id}
+                              aria-describedby={!canDelete ? `delete-tooltip-${product.id}` : undefined}
+                            >
+                              {deletingProductId === product.id ? "Deleting..." : "Delete"}
+                            </button>
+                                {!canDelete ? (
+                                  <span
+                                    id={`delete-tooltip-${product.id}`}
+                                    className={`${styles.deleteTooltip}${activeDeleteTooltipId === product.id ? ` ${styles.deleteTooltipVisible}` : ""}`}
+                                  >
+                                    {deleteDisabledReason}
+                                  </span>
+                                ) : null}
+                              </div>
+                            );
+                          })()}
                         </div>
                       </td>
                     </tr>

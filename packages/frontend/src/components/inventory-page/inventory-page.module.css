@@ -204,6 +204,7 @@
   flex: 1;
   min-height: 0;
   overflow-x: auto;
+  overflow-y: visible;
 }
 
 .table {
@@ -285,6 +286,58 @@
   gap: 12px;
 }
 
+.deleteActionWrapper {
+  position: relative;
+  display: inline-flex;
+  overflow: visible;
+}
+
+.deleteActionWrapperDisabled {
+  cursor: not-allowed;
+}
+
+.cardButtonMuted {
+  background: #f8fafc;
+  border-color: #d0d5dd;
+  color: #98a2b3;
+  pointer-events: none;
+}
+
+.cardButtonMuted:hover {
+  background: #f8fafc;
+  border-color: #d0d5dd;
+  color: #98a2b3;
+}
+
+.deleteTooltip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  width: 180px;
+  max-width: min(180px, calc(100vw - 80px));
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: break-word;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 2;
+}
+
+.deleteTooltipVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .skuBadge {
   display: inline-flex;
   padding: 6px 10px;
@@ -317,6 +370,80 @@
   flex: 1;
 }
 
+.sectionHeaderSkeleton {
+  display: grid;
+  gap: 10px;
+}
+
+.skeletonTable {
+  display: grid;
+  gap: 14px;
+}
+
+.skeletonRow {
+  display: grid;
+  grid-template-columns: 120px 180px minmax(220px, 1fr) 140px 90px 120px;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.skeletonBlock {
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #eef2f6 0%, #f8fafc 50%, #eef2f6 100%);
+  background-size: 200% 100%;
+  animation: inventorySkeletonPulse 1.2s ease-in-out infinite;
+}
+
+.skeletonTitle {
+  width: 180px;
+  height: 20px;
+  border-radius: 10px;
+}
+
+.skeletonText {
+  width: 280px;
+  height: 14px;
+  border-radius: 8px;
+}
+
+.skeletonButton {
+  width: 130px;
+  height: 44px;
+}
+
+.skeletonCellShort {
+  width: 80px;
+  height: 16px;
+}
+
+.skeletonCellMedium {
+  width: 120px;
+  height: 16px;
+}
+
+.skeletonCellLong {
+  width: 100%;
+  height: 16px;
+}
+
+.skeletonCellAction {
+  width: 110px;
+  height: 40px;
+}
+
+@keyframes inventorySkeletonPulse {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 .pagination {
   justify-content: center;
   margin-top: auto;
@@ -343,5 +470,9 @@
 
   .title {
     font-size: 28px;
+  }
+
+  .skeletonRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

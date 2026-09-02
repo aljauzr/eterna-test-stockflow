@@ -77,11 +77,15 @@ export class InventoryService {
       .sort({ updatedAt: -1, _id: -1 })
       .skip(skip)
       .limit(limit);
+    const referencedProductIds = await this.getReferencedProductIdSet(
+      userId,
+      products.map((product) => product._id),
+    );
 
     return {
       success: true,
       data: {
-        items: products.map((product) => this.toProductResponse(product)),
+        items: products.map((product) => this.toProductResponse(product, referencedProductIds)),
         pagination: {
           page: safePage,
           limit,
@@ -103,11 +107,15 @@ export class InventoryService {
         ownerId: new Types.ObjectId(userId),
       })
       .sort({ name: 1, sku: 1, _id: 1 });
+    const referencedProductIds = await this.getReferencedProductIdSet(
+      userId,
+      products.map((product) => product._id),
+    );
 
     return {
       success: true,
       data: {
-        items: products.map((product) => this.toProductResponse(product)),
+        items: products.map((product) => this.toProductResponse(product, referencedProductIds)),
       },
     };
   }
@@ -145,10 +153,11 @@ export class InventoryService {
 
   async getOne(userId: string, productId: string) {
     const product = await this.findOwnedProductOrFail(userId, productId);
+    const referencedProductIds = await this.getReferencedProductIdSet(userId, [product._id]);
 
     return {
       success: true,
-      data: this.toProductResponse(product),
+      data: this.toProductResponse(product, referencedProductIds),
     };
   }
 
@@ -170,9 +179,11 @@ export class InventoryService {
 
     try {
       await product.save();
+      const referencedProductIds = await this.getReferencedProductIdSet(userId, [product._id]);
+
       return {
         success: true,
-        data: this.toProductResponse(product),
+        data: this.toProductResponse(product, referencedProductIds),
       };
     } catch (error) {
       this.rethrowDuplicateSkuError(error);
@@ -257,16 +268,39 @@ export class InventoryService {
     }
   }
 
-  private toProductResponse(product: ProductDocument) {
+  private async getReferencedProductIdSet(userId: string, productIds: Types.ObjectId[]) {
+    if (productIds.length === 0) {
+      return new Set<string>();
+    }
+
+    const referencedProductIds = await this.invoiceModel.distinct("items.productId", {
+      ownerId: new Types.ObjectId(userId),
+      "items.productId": { $in: productIds },
+    });
+
+    return new Set(
+      referencedProductIds.map((value) =>
+        value instanceof Types.ObjectId ? value.toString() : String(value),
+      ),
+    );
+  }
+
+  private toProductResponse(product: ProductDocument, referencedProductIds?: Set<string>) {
     const source = product.toObject() as ProductObject;
+    const productId = source._id.toString();
+    const isReferencedByInvoice = referencedProductIds?.has(productId) ?? false;
 
     return {
-      id: source._id.toString(),
+      id: productId,
       sku: source.sku,
       name: source.name,
       description: source.description,
       unitPrice: source.unitPrice,
       quantityOnHand: source.quantityOnHand,
+      canDelete: !isReferencedByInvoice,
+      deleteDisabledReason: isReferencedByInvoice
+        ? "This product cannot be deleted because it is already linked to an invoice."
+        : null,
       createdAt: source.createdAt?.toISOString() ?? null,
       updatedAt: source.updatedAt?.toISOString() ?? null,
     };
