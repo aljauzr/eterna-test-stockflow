@@ -1,10 +1,17 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, apiRequest } from "../../lib/api";
 import { getStoredAccessToken } from "../../lib/auth-storage";
 import { DashboardShell } from "../dashboard-shell/dashboard-shell";
+import {
+  ProductFieldErrors,
+  ProductFormDrawer,
+  ProductFormState,
+  ProductSubmitMode,
+} from "./product-form-drawer";
+import { ProductDeleteDialog } from "./product-delete-dialog";
 import styles from "./inventory-page.module.css";
 
 type Product = {
@@ -41,12 +48,11 @@ type ProductResponse = {
   data: Product;
 };
 
-type ProductFormState = {
-  sku: string;
-  name: string;
-  description: string;
-  unitPrice: string;
-  quantityOnHand: string;
+type SuggestedSkuResponse = {
+  success: boolean;
+  data: {
+    sku: string;
+  };
 };
 
 const emptyForm: ProductFormState = {
@@ -57,7 +63,7 @@ const emptyForm: ProductFormState = {
   quantityOnHand: "",
 };
 
-const emptyFieldErrors = {
+const emptyFieldErrors: ProductFieldErrors = {
   sku: "",
   name: "",
   description: "",
@@ -74,6 +80,31 @@ const emptyPagination = {
   hasPreviousPage: false,
 };
 
+const DRAWER_ANIMATION_MS = 280;
+
+function parseSequentialSkuNumber(sku: string) {
+  const match = /^SKU-(\d+)$/i.exec(sku.trim());
+
+  if (!match) {
+    return 0;
+  }
+
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatSequentialSkuNumber(value: number) {
+  return `SKU-${String(value).padStart(3, "0")}`;
+}
+
+function getNextSequentialSku(skus: string[]) {
+  const maxValue = skus.reduce((currentMax, sku) => {
+    return Math.max(currentMax, parseSequentialSkuNumber(sku));
+  }, 0);
+
+  return formatSequentialSkuNumber(maxValue + 1);
+}
+
 export function InventoryPageContent() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
@@ -84,12 +115,15 @@ export function InventoryPageContent() {
   const [actionError, setActionError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductFormState>(emptyForm);
   const [fieldErrors, setFieldErrors] = useState(emptyFieldErrors);
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
+  const [productPendingDelete, setProductPendingDelete] = useState<Product | null>(null);
+  const closeDrawerTimeoutRef = useRef<number | null>(null);
 
   const numberFormatter = useMemo(
     () =>
@@ -168,23 +202,96 @@ export function InventoryPageContent() {
     void loadProducts(1, "");
   }, [loadProducts]);
 
-  function resetFormState() {
-    setForm(emptyForm);
+  useEffect(() => {
+    return () => {
+      if (closeDrawerTimeoutRef.current) {
+        window.clearTimeout(closeDrawerTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const resolveSuggestedSku = useCallback(
+    (serverSku?: string | null, extraSkus: string[] = []) => {
+      const fallbackSku = getNextSequentialSku([
+        ...products.map((product) => product.sku),
+        ...extraSkus,
+      ]);
+
+      if (!serverSku) {
+        return fallbackSku;
+      }
+
+      const serverValue = parseSequentialSkuNumber(serverSku);
+      const fallbackValue = parseSequentialSkuNumber(fallbackSku);
+
+      return serverValue >= fallbackValue ? serverSku : fallbackSku;
+    },
+    [products],
+  );
+
+  const loadSuggestedSku = useCallback(async () => {
+    const headers = getAuthHeaders();
+    if (!headers) {
+      return null;
+    }
+
+    try {
+      const response = await apiRequest<SuggestedSkuResponse>("/products/suggested-sku", {
+        headers,
+      });
+
+      return response.data.sku;
+    } catch (error) {
+      if (error instanceof ApiError && error.message === "Authentication required") {
+        router.replace("/login");
+      }
+
+      return null;
+    }
+  }, [getAuthHeaders, router]);
+
+  function resetFormState(nextSku = "") {
+    setForm({
+      ...emptyForm,
+      sku: nextSku,
+    });
     setFieldErrors(emptyFieldErrors);
     setFormError("");
     setEditingProductId(null);
   }
 
-  function openCreateForm() {
-    resetFormState();
+  function clearCloseDrawerTimeout() {
+    if (closeDrawerTimeoutRef.current) {
+      window.clearTimeout(closeDrawerTimeoutRef.current);
+      closeDrawerTimeoutRef.current = null;
+    }
+  }
+
+  function openFormDrawer() {
+    clearCloseDrawerTimeout();
     setIsFormOpen(true);
+
+    window.requestAnimationFrame(() => {
+      setIsFormVisible(true);
+    });
+  }
+
+  async function openCreateForm() {
+    const suggestedSku = await loadSuggestedSku();
+    resetFormState(resolveSuggestedSku(suggestedSku));
     setActionMessage("");
     setActionError("");
+    openFormDrawer();
   }
 
   function closeForm() {
-    resetFormState();
-    setIsFormOpen(false);
+    clearCloseDrawerTimeout();
+    setIsFormVisible(false);
+    closeDrawerTimeoutRef.current = window.setTimeout(() => {
+      resetFormState();
+      setIsFormOpen(false);
+      closeDrawerTimeoutRef.current = null;
+    }, DRAWER_ANIMATION_MS);
   }
 
   function handleEdit(product: Product) {
@@ -198,9 +305,9 @@ export function InventoryPageContent() {
     });
     setFieldErrors(emptyFieldErrors);
     setFormError("");
-    setIsFormOpen(true);
     setActionMessage("");
     setActionError("");
+    openFormDrawer();
   }
 
   function buildProductPayload() {
@@ -222,7 +329,7 @@ export function InventoryPageContent() {
     };
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>, mode: ProductSubmitMode) {
     event.preventDefault();
 
     const headers = getAuthHeaders();
@@ -247,12 +354,12 @@ export function InventoryPageContent() {
         },
       );
 
-      closeForm();
-      setActionMessage(
-        isEditing
-          ? `Product "${response.data.name}" updated successfully.`
-          : `Product "${response.data.name}" created successfully.`,
-      );
+      if (isEditing || mode === "save") {
+        closeForm();
+      } else {
+        const suggestedSku = await loadSuggestedSku();
+        resetFormState(resolveSuggestedSku(suggestedSku, [response.data.sku]));
+      }
 
       await loadProducts(isEditing ? pagination.page : 1, appliedSearch);
     } catch (error) {
@@ -277,34 +384,44 @@ export function InventoryPageContent() {
     }
   }
 
-  async function handleDelete(product: Product) {
+  function openDeleteDialog(product: Product) {
+    setProductPendingDelete(product);
+    setActionMessage("");
+    setActionError("");
+  }
+
+  function closeDeleteDialog() {
+    if (deletingProductId) {
+      return;
+    }
+
+    setProductPendingDelete(null);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!productPendingDelete) {
+      return;
+    }
+
     const headers = getAuthHeaders();
     if (!headers) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Delete "${product.name}"? Products already used in invoices cannot be removed.`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    setDeletingProductId(product.id);
+    setDeletingProductId(productPendingDelete.id);
     setActionMessage("");
     setActionError("");
 
     try {
-      await apiRequest(`/products/${product.id}`, {
+      await apiRequest(`/products/${productPendingDelete.id}`, {
         method: "DELETE",
         headers,
       });
 
       const nextPage =
         products.length === 1 && pagination.page > 1 ? pagination.page - 1 : pagination.page;
-
-      setActionMessage(`Product "${product.name}" deleted successfully.`);
+        
+      setProductPendingDelete(null);
       await loadProducts(nextPage, appliedSearch);
     } catch (error) {
       if (error instanceof ApiError && error.message === "Authentication required") {
@@ -334,6 +451,13 @@ export function InventoryPageContent() {
     return dateFormatter.format(new Date(value));
   }
 
+  function handleFormChange(field: keyof ProductFormState, value: string) {
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
   return (
     <DashboardShell>
       <main className={styles.page}>
@@ -347,7 +471,15 @@ export function InventoryPageContent() {
                 className={styles.searchInput}
                 type="search"
                 value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
+                onChange={(event) => {
+                  const nextValue = event.target.value;
+
+                  setSearchInput(nextValue);
+
+                  if (nextValue === "" && appliedSearch !== "") {
+                    void loadProducts(1, "");
+                  }
+                }}
                 placeholder="Search by product name or SKU"
               />
             </label>
@@ -359,118 +491,6 @@ export function InventoryPageContent() {
             </div>
           </form>
         </section>
-
-        {isFormOpen ? (
-          <section className={styles.formCard}>
-            <div className={styles.sectionHeader}>
-              <div>
-                <h2 className={styles.sectionTitle}>
-                  {isEditing ? "Edit Product" : "Add Product"}
-                </h2>
-              </div>
-
-              <button type="button" className={styles.formCloseButton} onClick={closeForm}>
-                Close
-              </button>
-            </div>
-
-            <form className={styles.form} onSubmit={handleSubmit}>
-              <label className={styles.field}>
-                <span className={styles.label}>SKU</span>
-                <input
-                  className={styles.input}
-                  value={form.sku}
-                  onChange={(event) => setForm((current) => ({ ...current, sku: event.target.value }))}
-                  placeholder="SKU-001"
-                  required
-                />
-                {fieldErrors.sku ? <span className={styles.fieldError}>{fieldErrors.sku}</span> : null}
-              </label>
-
-              <label className={styles.field}>
-                <span className={styles.label}>Product Name</span>
-                <input
-                  className={styles.input}
-                  value={form.name}
-                  onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                  placeholder="Wireless Barcode Scanner"
-                  required
-                />
-                {fieldErrors.name ? <span className={styles.fieldError}>{fieldErrors.name}</span> : null}
-              </label>
-
-              <label className={`${styles.field} ${styles.fieldFull}`}>
-                <span className={styles.label}>Description</span>
-                <textarea
-                  className={styles.textarea}
-                  value={form.description}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, description: event.target.value }))
-                  }
-                  placeholder="Optional product notes"
-                  rows={4}
-                />
-                {fieldErrors.description ? (
-                  <span className={styles.fieldError}>{fieldErrors.description}</span>
-                ) : null}
-              </label>
-
-              <label className={styles.field}>
-                <span className={styles.label}>Unit Price</span>
-                <input
-                  className={styles.input}
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.unitPrice}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, unitPrice: event.target.value }))
-                  }
-                  placeholder="0.00"
-                  required
-                />
-                {fieldErrors.unitPrice ? (
-                  <span className={styles.fieldError}>{fieldErrors.unitPrice}</span>
-                ) : null}
-              </label>
-
-              <label className={styles.field}>
-                <span className={styles.label}>Quantity on Hand</span>
-                <input
-                  className={styles.input}
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={form.quantityOnHand}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, quantityOnHand: event.target.value }))
-                  }
-                  placeholder="0"
-                  required
-                />
-                {fieldErrors.quantityOnHand ? (
-                  <span className={styles.fieldError}>{fieldErrors.quantityOnHand}</span>
-                ) : null}
-              </label>
-
-              {formError ? <div className={styles.formError}>{formError}</div> : null}
-
-              <div className={styles.formActions}>
-                <button className={styles.primaryButton} type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Saving..." : isEditing ? "Update Product" : "Save Product"}
-                </button>
-                <button
-                  className={styles.secondaryButton}
-                  type="button"
-                  onClick={closeForm}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </section>
-        ) : null}
 
         {actionMessage ? <div className={styles.successBanner}>{actionMessage}</div> : null}
         {actionError ? <div className={styles.errorBanner}>{actionError}</div> : null}
@@ -486,15 +506,8 @@ export function InventoryPageContent() {
             </div>
 
             <div className={styles.headerActions}>
-              <button className={styles.addButton} type="button" onClick={openCreateForm}>
-                {isFormOpen && !isEditing ? "Add Another Product" : "Add Product"}
-              </button>
-              <button
-                className={styles.secondaryButton}
-                type="button"
-                onClick={() => void loadProducts(pagination.page, appliedSearch)}
-              >
-                Refresh List
+              <button className={styles.addButton} type="button" onClick={() => void openCreateForm()}>
+                Add Product
               </button>
             </div>
           </div>
@@ -510,58 +523,57 @@ export function InventoryPageContent() {
           ) : null}
 
           {!isLoading && products.length > 0 ? (
-            <div className={styles.grid}>
-              {products.map((product) => (
-                <article key={product.id} className={styles.card}>
-                  <div className={styles.cardHeader}>
-                    <div>
-                      <span className={styles.cardSku}>{product.sku}</span>
-                      <h3 className={styles.cardTitle}>{product.name}</h3>
-                    </div>
-
-                    <div className={styles.cardActions}>
-                      <button
-                        className={styles.cardButton}
-                        type="button"
-                        onClick={() => handleEdit(product)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className={`${styles.cardButton} ${styles.cardButtonDanger}`}
-                        type="button"
-                        onClick={() => void handleDelete(product)}
-                        disabled={deletingProductId === product.id}
-                      >
-                        {deletingProductId === product.id ? "Deleting..." : "Delete"}
-                      </button>
-                    </div>
-                  </div>
-
-                  <p className={styles.cardDescription}>
-                    {product.description || "No description provided for this product."}
-                  </p>
-
-                  <dl className={styles.metaList}>
-                    <div className={styles.metaItem}>
-                      <dt className={styles.metaLabel}>Unit Price</dt>
-                      <dd className={styles.metaValue}>{formatMoney(product.unitPrice)}</dd>
-                    </div>
-                    <div className={styles.metaItem}>
-                      <dt className={styles.metaLabel}>Quantity on Hand</dt>
-                      <dd className={styles.metaValue}>{product.quantityOnHand}</dd>
-                    </div>
-                    <div className={styles.metaItem}>
-                      <dt className={styles.metaLabel}>Created</dt>
-                      <dd className={styles.metaValue}>{formatTimestamp(product.createdAt)}</dd>
-                    </div>
-                    <div className={styles.metaItem}>
-                      <dt className={styles.metaLabel}>Last Updated</dt>
-                      <dd className={styles.metaValue}>{formatTimestamp(product.updatedAt)}</dd>
-                    </div>
-                  </dl>
-                </article>
-              ))}
+            <div className={styles.tableWrapper}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th className={styles.tableHead}>SKU</th>
+                    <th className={styles.tableHead}>Product Name</th>
+                    <th className={styles.tableHead}>Description</th>
+                    <th className={styles.tableHead}>Unit Price</th>
+                    <th className={styles.tableHead}>Quantity</th>
+                    <th className={`${styles.tableHead} ${styles.tableHeadActions}`}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {products.map((product) => (
+                    <tr key={product.id} className={styles.tableRow}>
+                      <td className={styles.tableCell}>
+                        <span className={styles.skuBadge}>{product.sku}</span>
+                      </td>
+                      <td className={styles.tableCell}>
+                        <span className={styles.productName}>{product.name}</span>
+                      </td>
+                      <td className={styles.tableCell}>
+                        <span className={styles.descriptionText}>
+                          {product.description}
+                        </span>
+                      </td>
+                      <td className={styles.tableCell}>{formatMoney(product.unitPrice)}</td>
+                      <td className={styles.tableCell}>{product.quantityOnHand}</td>
+                      <td className={`${styles.tableCell} ${styles.tableCellActions}`}>
+                        <div className={styles.rowActions}>
+                          <button
+                            className={styles.cardButton}
+                            type="button"
+                            onClick={() => handleEdit(product)}
+                          >
+                            Update
+                          </button>
+                          <button
+                            className={`${styles.cardButton} ${styles.cardButtonDanger}`}
+                            type="button"
+                            onClick={() => openDeleteDialog(product)}
+                            disabled={deletingProductId === product.id}
+                          >
+                            {deletingProductId === product.id ? "Deleting..." : "Delete"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : null}
 
@@ -588,6 +600,27 @@ export function InventoryPageContent() {
           </div>
         </section>
       </main>
+
+      <ProductFormDrawer
+        isEditing={isEditing}
+        isOpen={isFormOpen}
+        isVisible={isFormVisible}
+        isSubmitting={isSubmitting}
+        form={form}
+        fieldErrors={fieldErrors}
+        formError={formError}
+        onClose={closeForm}
+        onSubmit={handleSubmit}
+        onChange={handleFormChange}
+      />
+
+      <ProductDeleteDialog
+        isOpen={productPendingDelete !== null}
+        productName={productPendingDelete?.name ?? ""}
+        isDeleting={deletingProductId === productPendingDelete?.id}
+        onClose={closeDeleteDialog}
+        onConfirm={() => void handleDeleteConfirm()}
+      />
     </DashboardShell>
   );
 }

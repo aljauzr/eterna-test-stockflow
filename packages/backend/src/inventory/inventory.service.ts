@@ -97,6 +97,37 @@ export class InventoryService {
     };
   }
 
+  async getSuggestedSku(userId: string) {
+    const products = await this.productModel
+      .find({
+        ownerId: new Types.ObjectId(userId),
+        sku: { $regex: "^SKU-[0-9]+$", $options: "i" },
+      })
+      .select({ sku: 1, _id: 0 })
+      .lean();
+
+    let maxSkuNumber = 0;
+
+    for (const product of products) {
+      const match = /^SKU-(\d+)$/i.exec(product.sku);
+      if (!match) {
+        continue;
+      }
+
+      const skuNumber = Number(match[1]);
+      if (Number.isFinite(skuNumber) && skuNumber > maxSkuNumber) {
+        maxSkuNumber = skuNumber;
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        sku: `SKU-${String(maxSkuNumber + 1).padStart(3, "0")}`,
+      },
+    };
+  }
+
   async getOne(userId: string, productId: string) {
     const product = await this.findOwnedProductOrFail(userId, productId);
 
@@ -189,7 +220,7 @@ export class InventoryService {
       throw new UnprocessableEntityException({
         message: "Validation failed",
         errors: {
-          sku: ["SKU must be unique for your account"],
+          sku: ["SKU already exist."],
         },
       });
     }
@@ -205,7 +236,7 @@ export class InventoryService {
       throw new UnprocessableEntityException({
         message: "Validation failed",
         errors: {
-          sku: ["SKU must be unique for your account"],
+          sku: ["SKU already exist."],
         },
       });
     }

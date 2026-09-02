@@ -38,6 +38,11 @@ export class InventoryController {
     return this.inventoryService.list(user.id, query);
   }
 
+  @Get("suggested-sku")
+  getSuggestedSku(@CurrentUser() user: AuthenticatedUser) {
+    return this.inventoryService.getSuggestedSku(user.id);
+  }
+
   @Get(":productId")
   getOne(
     @CurrentUser() user: AuthenticatedUser,

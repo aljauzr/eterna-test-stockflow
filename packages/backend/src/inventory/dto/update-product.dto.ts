@@ -4,6 +4,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
 } from "class-validator";
 
@@ -25,6 +26,7 @@ export class UpdateProductDto {
   @Transform(({ value }) => trimStringValue(value))
   @IsOptional()
   @IsString()
+  @MaxLength(150, { message: "Description must be at most 150 characters." })
   description?: string;
 
   @Type(() => Number)

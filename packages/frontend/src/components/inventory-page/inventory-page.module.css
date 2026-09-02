@@ -6,7 +6,6 @@
   gap: 24px;
 }
 
-.formCard,
 .listSection {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -23,9 +22,6 @@
 .headerActions,
 .searchForm,
 .searchActions,
-.formActions,
-.cardHeader,
-.cardActions,
 .pagination {
   display: flex;
   justify-content: space-between;
@@ -66,7 +62,6 @@
 
 .addButton,
 .searchButton,
-.primaryButton,
 .paginationButton,
 .cardButton,
 .secondaryButton,
@@ -85,7 +80,6 @@
 
 .addButton,
 .searchButton,
-.primaryButton,
 .paginationButton,
 .cardButton {
   background: var(--primary);
@@ -95,7 +89,6 @@
 
 .addButton:hover,
 .searchButton:hover,
-.primaryButton:hover,
 .paginationButton:hover,
 .cardButton:hover {
   background: #3474de;
@@ -162,51 +155,21 @@
   border-color: var(--primary);
 }
 
+.searchInput::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
 .sectionTitle {
   margin: 0;
   font-size: 24px;
 }
 
-.form {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 20px;
-}
-
-.field {
-  display: grid;
-  gap: 8px;
-}
-
-.fieldFull {
-  grid-column: 1 / -1;
-}
-
-.label {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.textarea {
-  resize: vertical;
-}
-
-.fieldError,
-.formError,
 .errorBanner,
 .successBanner {
   border-radius: 14px;
   padding: 12px 14px;
 }
 
-.fieldError {
-  padding: 0;
-  color: #b42318;
-  font-size: 14px;
-}
-
-.formError,
 .errorBanner {
   border: 1px solid #fecdca;
   background: #fef3f2;
@@ -237,26 +200,93 @@
   padding: 24px;
 }
 
-.grid {
-  display: grid;
+.tableWrapper {
   flex: 1;
-  align-content: start;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  min-height: 0;
+  overflow-x: auto;
 }
 
-.card {
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 20px;
-  background: #fff;
-  display: grid;
-  gap: 18px;
+.table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 880px;
 }
 
-.cardSku {
+.tableHead,
+.tableCell {
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tableHead {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: #f8fafc;
+}
+
+.tableHead:first-child {
+  border-top-left-radius: 18px;
+}
+
+.tableHead:last-child {
+  border-top-right-radius: 18px;
+}
+
+.tableRow:last-child .tableCell {
+  border-bottom: none;
+}
+
+.tableHeadActions,
+.tableCellActions {
+  text-align: right;
+}
+
+.tableHead:nth-child(1),
+.tableCell:nth-child(1) {
+  width: 120px;
+}
+
+.tableHead:nth-child(2),
+.tableCell:nth-child(2) {
+  width: 180px;
+}
+
+.tableHead:nth-child(3),
+.tableCell:nth-child(3) {
+  width: 32%;
+}
+
+.tableHead:nth-child(4),
+.tableCell:nth-child(4) {
+  width: 140px;
+}
+
+.tableHead:nth-child(5),
+.tableCell:nth-child(5) {
+  width: 110px;
+}
+
+.tableHead:nth-child(6),
+.tableCell:nth-child(6) {
+  width: 170px;
+}
+
+.rowActions {
   display: inline-flex;
-  margin-bottom: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.skuBadge {
+  display: inline-flex;
   padding: 6px 10px;
   border-radius: 999px;
   background: #f5f8ff;
@@ -267,29 +297,24 @@
   text-transform: uppercase;
 }
 
-.cardTitle {
-  margin: 0;
-  font-size: 22px;
-  line-height: 1.2;
-}
-
-.metaList {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.metaItem {
-  margin: 0;
-}
-
-.metaValue {
-  margin: 6px 0 0;
-  font-size: 15px;
+.productName {
+  font-size: 16px;
   font-weight: 700;
   color: var(--foreground);
-  line-height: 1.5;
+}
+
+.descriptionText {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.grid {
+  flex: 1;
 }
 
 .pagination {
@@ -299,7 +324,6 @@
 
 .addButton:disabled,
 .searchButton:disabled,
-.primaryButton:disabled,
 .paginationButton:disabled,
 .cardButton:disabled,
 .secondaryButton:disabled,
@@ -308,35 +332,16 @@
   cursor: not-allowed;
 }
 
-@media (max-width: 960px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 720px) {
   .page {
     padding: 24px;
   }
 
-  .formCard,
   .listSection {
     padding: 20px;
   }
 
   .title {
     font-size: 28px;
-  }
-
-  .form {
-    grid-template-columns: 1fr;
-  }
-
-  .fieldFull {
-    grid-column: auto;
-  }
-
-  .metaList {
-    grid-template-columns: 1fr;
   }
 }
