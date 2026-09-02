@@ -123,7 +123,6 @@ export function AuthForm({ mode }: AuthFormProps) {
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@example.com"
                 autoComplete="email"
                 required
               />
@@ -137,7 +136,6 @@ export function AuthForm({ mode }: AuthFormProps) {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="At least 8 characters"
                 autoComplete={mode === "register" ? "new-password" : "current-password"}
                 required
               />

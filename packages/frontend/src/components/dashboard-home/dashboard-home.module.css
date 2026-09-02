@@ -99,6 +99,49 @@
   border-right-color: var(--primary);
 }
 
+.skeletonBlock {
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #eef2f6 0%, #f8fafc 50%, #eef2f6 100%);
+  background-size: 200% 100%;
+  animation: dashboardSkeletonPulse 1.2s ease-in-out infinite;
+}
+
+.skeletonEyebrow {
+  width: 110px;
+  height: 16px;
+  margin: 0 auto;
+}
+
+.skeletonTitle {
+  width: min(100%, 440px);
+  height: 36px;
+  margin: 16px auto 0;
+  border-radius: 16px;
+}
+
+.skeletonTitleShort {
+  width: min(100%, 320px);
+  height: 36px;
+  margin: 12px auto 0;
+  border-radius: 16px;
+}
+
+.skeletonButton {
+  width: 160px;
+  height: 46px;
+}
+
+@keyframes dashboardSkeletonPulse {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);

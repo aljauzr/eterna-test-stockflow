@@ -11,6 +11,7 @@ type InvoiceFormDrawerProps = {
   isOpen: boolean;
   isEditing: boolean;
   isSubmitting: boolean;
+  taxRateLabel: string;
   products: ProductCatalogItem[];
   form: InvoiceFormState;
   fieldErrors: InvoiceFieldErrors;
@@ -40,6 +41,7 @@ export function InvoiceFormDrawer({
   isOpen,
   isEditing,
   isSubmitting,
+  taxRateLabel,
   products,
   form,
   fieldErrors,
@@ -54,6 +56,29 @@ export function InvoiceFormDrawer({
   if (!isOpen) {
     return null;
   }
+
+  const taxRateBasisPoints = parseTaxRateBasisPoints(taxRateLabel);
+  const summary = form.items.reduce(
+    (current, item) => {
+      const selectedProduct = products.find((product) => product.id === item.productId);
+      const quantity = Number(item.quantity);
+
+      if (!selectedProduct || !Number.isFinite(quantity) || quantity <= 0) {
+        return current;
+      }
+
+      const unitPriceMinor = Math.round(selectedProduct.unitPrice * 100);
+      current.subtotal += unitPriceMinor * quantity;
+      current.items += quantity;
+      return current;
+    },
+    {
+      subtotal: 0,
+      items: 0,
+    },
+  );
+  const taxAmount = Math.round((summary.subtotal * taxRateBasisPoints) / 10000);
+  const total = summary.subtotal + taxAmount;
 
   return (
     <div className={styles.overlay} onClick={isSubmitting ? undefined : onClose}>
@@ -202,6 +227,29 @@ export function InvoiceFormDrawer({
             </div>
           </section>
 
+          <section className={styles.summarySection}>
+            <h3 className={styles.summaryTitle}>Summary</h3>
+
+            <div className={styles.summaryGrid}>
+              <div className={styles.summaryCard}>
+                <span className={styles.summaryLabel}>Subtotal</span>
+                <span className={styles.summaryValue}>{formatMinorCurrency(summary.subtotal)}</span>
+              </div>
+              <div className={styles.summaryCard}>
+                <span className={styles.summaryLabel}>{`Tax (${taxRateLabel}%)`}</span>
+                <span className={styles.summaryValue}>{formatMinorCurrency(taxAmount)}</span>
+              </div>
+              <div className={styles.summaryCard}>
+                <span className={styles.summaryLabel}>Total</span>
+                <span className={styles.summaryValue}>{formatMinorCurrency(total)}</span>
+              </div>
+              <div className={styles.summaryCard}>
+                <span className={styles.summaryLabel}>Items</span>
+                <span className={styles.summaryValue}>{summary.items}</span>
+              </div>
+            </div>
+          </section>
+
           <div className={styles.actions}>
             <button className={styles.primaryButton} type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Saving..." : isEditing ? "Update" : "Save"}
@@ -211,4 +259,17 @@ export function InvoiceFormDrawer({
       </section>
     </div>
   );
+}
+
+function parseTaxRateBasisPoints(value: string) {
+  const normalizedValue = value.trim();
+  const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(normalizedValue);
+
+  if (!match) {
+    return 1100;
+  }
+
+  const integerPart = Number(match[1]) * 100;
+  const decimalPart = Number((match[2] ?? "").padEnd(2, "0") || "0");
+  return integerPart + decimalPart;
 }
