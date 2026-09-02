@@ -1,0 +1,347 @@
+.page {
+  min-height: 100vh;
+  padding: 32px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.listSection {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.hero {
+  padding: 0;
+}
+
+.heroHeader,
+.sectionHeader,
+.headerActions,
+.searchForm,
+.searchActions,
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 16px 0 12px;
+  font-size: 36px;
+  line-height: 1.1;
+}
+
+.description,
+.sectionDescription,
+.cardDescription,
+.paginationInfo,
+.searchLabel,
+.metaLabel {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.addButton,
+.searchButton,
+.paginationButton,
+.cardButton,
+.secondaryButton,
+.formCloseButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.addButton,
+.searchButton,
+.paginationButton,
+.cardButton {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.addButton:hover,
+.searchButton:hover,
+.paginationButton:hover,
+.cardButton:hover {
+  background: #3474de;
+  border-color: #3474de;
+}
+
+.secondaryButton,
+.formCloseButton {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: #c7d7fe;
+}
+
+.secondaryButton:hover,
+.formCloseButton:hover {
+  background: #f7faff;
+}
+
+.cardButtonDanger {
+  background: #fef3f2;
+  border-color: #fecdca;
+  color: #b42318;
+}
+
+.cardButtonDanger:hover {
+  background: #fee4e2;
+  border-color: #fda29b;
+}
+
+.searchForm {
+  justify-content: flex-start;
+}
+
+.headerActions {
+  justify-content: flex-end;
+}
+
+.searchField {
+  flex: 1 1 320px;
+  display: grid;
+  gap: 8px;
+}
+
+.searchLabel {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.searchInput,
+.input,
+.textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 13px 14px;
+  background: #fff;
+  color: var(--foreground);
+}
+
+.searchInput:focus,
+.input:focus,
+.textarea:focus {
+  outline: 2px solid rgba(23, 92, 211, 0.18);
+  border-color: var(--primary);
+}
+
+.searchInput::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 24px;
+}
+
+.errorBanner,
+.successBanner {
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.errorBanner {
+  border: 1px solid #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.successBanner {
+  border: 1px solid #abefc6;
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.listSection {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 20px;
+}
+
+.emptyState {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: 180px;
+  border-radius: 18px;
+  color: var(--muted);
+  text-align: center;
+  padding: 24px;
+}
+
+.tableWrapper {
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 880px;
+}
+
+.tableHead,
+.tableCell {
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tableHead {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: #f8fafc;
+}
+
+.tableHead:first-child {
+  border-top-left-radius: 18px;
+}
+
+.tableHead:last-child {
+  border-top-right-radius: 18px;
+}
+
+.tableRow:last-child .tableCell {
+  border-bottom: none;
+}
+
+.tableHeadActions,
+.tableCellActions {
+  text-align: right;
+}
+
+.tableHead:nth-child(1),
+.tableCell:nth-child(1) {
+  width: 120px;
+}
+
+.tableHead:nth-child(2),
+.tableCell:nth-child(2) {
+  width: 180px;
+}
+
+.tableHead:nth-child(3),
+.tableCell:nth-child(3) {
+  width: 32%;
+}
+
+.tableHead:nth-child(4),
+.tableCell:nth-child(4) {
+  width: 140px;
+}
+
+.tableHead:nth-child(5),
+.tableCell:nth-child(5) {
+  width: 110px;
+}
+
+.tableHead:nth-child(6),
+.tableCell:nth-child(6) {
+  width: 170px;
+}
+
+.rowActions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.skuBadge {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f5f8ff;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.productName {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.descriptionText {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.grid {
+  flex: 1;
+}
+
+.pagination {
+  justify-content: center;
+  margin-top: auto;
+}
+
+.addButton:disabled,
+.searchButton:disabled,
+.paginationButton:disabled,
+.cardButton:disabled,
+.secondaryButton:disabled,
+.formCloseButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 24px;
+  }
+
+  .listSection {
+    padding: 20px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+}
