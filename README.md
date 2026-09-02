@@ -269,7 +269,7 @@ Current coverage includes:
 
 I used two AI tools during development:
 
-- **Trae AI Pro** as the primary coding assistant to build, refactor, and iterate on the application code across the frontend and backend.
+- **Trae AI Pro (with GPT-5.4)** as the primary coding assistant to build, refactor, and iterate on the application code across the frontend and backend.
 - **ChatGPT Free** to discuss better solution options and more optimized approaches, especially to help make the prompts I gave to Trae AI Pro more efficient and directed.
 
 Both tools were used as development assistants. The final code, debugging process, and implementation decisions were still reviewed and adjusted manually in the local workspace.
@@ -277,3 +277,19 @@ Both tools were used as development assistants. The final code, debugging proces
 ## Time Spent
 
 Approximately 7 hours.
+
+## UI Overview
+### 1. Dashboard
+![Dashboard](static/images/1.%20Dashboard.png)
+
+### 2. Inventory
+![Inventory](static/images/2.%20Inventory.png)
+
+### 2.1. Inventory - Add Product
+![Add Product](static/images/2.1.%20Inventory%20-%20Add%20Product.png)
+
+### 3. Invoice
+![Invoice](static/images/3.%20Invoice.png)
+
+### 3.1. Invoice - Create Invoice
+![Create Invoice](static/images/3.1.%20Invoice%20-%20Create%20Invoice.png)
