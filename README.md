@@ -27,17 +27,41 @@ yarn install
 mongodb://localhost:27017/stockflow
 ```
 
-5. Start the frontend:
+5. Seed the demo data:
+
+```bash
+yarn seed
+```
+
+6. Start the frontend:
 
 ```bash
 yarn dev:frontend
 ```
 
-6. Start the backend:
+7. Start the backend:
 
 ```bash
 yarn dev:backend
 ```
+
+## Demo Credentials
+
+After running `yarn seed`, use this account for a quick review:
+
+```text
+Email: reviewer@stockflow.local
+Password: Stockflow123!
+```
+
+## Seeded Review Data
+
+The seed script creates enough data for a fast product review:
+
+- 9 demo products so pagination and search can be checked quickly
+- 7 demo invoices across `DRAFT`, `ISSUED`, `PAID`, and `CANCELLED`
+- two draft invoices sharing the same product stock so the reviewer can verify stock-guard behavior when issuing invoices
+- products that are already linked to invoices and products that are still deletable, so delete rules can be verified from the inventory table
 
 ## Environment Variables
 
