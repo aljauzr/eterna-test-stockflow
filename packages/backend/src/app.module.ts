@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
+import { AuthModule } from "./auth/auth.module";
 import appConfig from "./config/app.config";
 import { HealthController } from "./health/health.controller";
 import { Product, ProductSchema } from "./schemas/product.schema";
-import { User, UserSchema } from "./schemas/user.schema";
 import { Invoice, InvoiceSchema } from "./schemas/invoice.schema";
 
 @Module({
@@ -20,10 +20,10 @@ import { Invoice, InvoiceSchema } from "./schemas/invoice.schema";
       }),
     }),
     MongooseModule.forFeature([
-      { name: User.name, schema: UserSchema },
       { name: Product.name, schema: ProductSchema },
       { name: Invoice.name, schema: InvoiceSchema },
     ]),
+    AuthModule,
   ],
   controllers: [HealthController],
 })
