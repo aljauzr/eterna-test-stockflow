@@ -213,6 +213,7 @@ This shape is used so the frontend can surface field-level and form-level errors
 - **CSS Modules** to keep styles local to each component and avoid inline styling noise.
 - **Yarn workspaces** to keep frontend and backend in one repo with simple shared commands.
 - **Integer minor units for invoice totals** so invoice money calculations avoid floating-point errors.
+- **Playwright E2E tests in `packages/e2e`** to validate the main reviewer flows against the running app.
 
 ## Trade-Offs And Known Limitations
 
@@ -229,6 +230,40 @@ This shape is used so the frontend can surface field-level and form-level errors
 - Improve concurrency handling for stock updates under simultaneous issue requests.
 - Add CI to run lint and tests automatically on each push.
 - Refine accessibility details and keyboard interactions across drawers, dialogs, and tooltips.
+
+## End-To-End Tests
+
+Playwright tests live in:
+
+```text
+packages/e2e
+```
+
+Install Playwright browser binaries once after dependency installation:
+
+```bash
+yarn workspace @stockflow/e2e exec playwright install
+```
+
+Run the E2E suite:
+
+```bash
+yarn test:e2e
+```
+
+Run it in headed mode:
+
+```bash
+yarn test:e2e:headed
+```
+
+Current coverage includes:
+
+- wrong-password login rejection
+- unauthenticated protected API request returns `401`
+- invoicing above available stock is rejected
+- issuing a draft invoice decrements stock
+- cancelling an issued invoice restores stock
 
 ## AI Usage
 

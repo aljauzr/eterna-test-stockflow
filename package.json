@@ -10,6 +10,8 @@
     "dev:frontend": "yarn workspace @stockflow/frontend dev",
     "dev:backend": "yarn workspace @stockflow/backend start:dev",
     "seed": "yarn workspace @stockflow/backend seed",
+    "test:e2e": "yarn workspace @stockflow/e2e test",
+    "test:e2e:headed": "yarn workspace @stockflow/e2e test:headed",
     "build": "yarn workspaces run build",
     "lint": "yarn workspaces run lint"
   }
