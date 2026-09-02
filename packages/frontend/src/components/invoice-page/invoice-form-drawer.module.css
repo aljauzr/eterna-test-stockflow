@@ -56,6 +56,7 @@
 
 .fieldFull,
 .lineItemsSection,
+.summarySection,
 .actions,
 .formError {
   grid-column: 1 / -1;
@@ -109,6 +110,11 @@
   padding-top: 8px;
 }
 
+.summarySection {
+  display: grid;
+  gap: 16px;
+}
+
 .lineItemsTitle {
   margin: 0;
   font-size: 20px;
@@ -123,6 +129,11 @@
 .lineItemsError {
   color: #b42318;
   font-size: 14px;
+}
+
+.summaryTitle {
+  margin: 0;
+  font-size: 20px;
 }
 
 .lineItemsList {
@@ -145,6 +156,37 @@
   margin: 8px 0 0;
   color: var(--muted);
   font-size: 14px;
+  line-height: 1.5;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summaryCard {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+  background: #fff;
+}
+
+.summaryLabel {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.summaryValue {
+  display: block;
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--foreground);
   line-height: 1.5;
 }
 
@@ -230,6 +272,10 @@
 
   .form,
   .lineItemRow {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryGrid {
     grid-template-columns: 1fr;
   }
 

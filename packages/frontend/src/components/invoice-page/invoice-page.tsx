@@ -132,7 +132,11 @@ function getStatusClassName(status: InvoiceStatus) {
   return `${styles.statusBadge} ${styles.statusDraft}`;
 }
 
-export function InvoicePageContent() {
+type InvoicePageContentProps = {
+  taxRateLabel: string;
+};
+
+export function InvoicePageContent({ taxRateLabel }: InvoicePageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -618,7 +622,7 @@ export function InvoicePageContent() {
           ) : (
             <div className={styles.sectionHeader}>
               <div>
-                <h2 className={styles.sectionTitle}>Invoices</h2>
+                <h2 className={styles.sectionTitle}>Invoice</h2>
                 <p className={styles.sectionDescription}>
                   {pagination.totalItems} invoice{pagination.totalItems === 1 ? "" : "s"} found in{" "}
                   {statusSummary}.
@@ -732,6 +736,7 @@ export function InvoicePageContent() {
         isOpen={isFormOpen}
         isEditing={isEditing}
         isSubmitting={isSubmitting}
+        taxRateLabel={taxRateLabel}
         products={products}
         form={form}
         fieldErrors={fieldErrors}
@@ -749,6 +754,7 @@ export function InvoicePageContent() {
         isOpen={isDetailOpen}
         isUpdatingStatus={isUpdatingStatus}
         actionError={detailActionError}
+        taxRateLabel={taxRateLabel}
         onClose={closeInvoiceDetail}
         onEdit={() => void (selectedInvoice ? openEditDrawer(selectedInvoice.id) : Promise.resolve())}
         onStatusChange={(status) => void handleStatusChange(status)}

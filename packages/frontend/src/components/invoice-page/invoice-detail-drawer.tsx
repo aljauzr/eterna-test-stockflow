@@ -8,6 +8,7 @@ type InvoiceDetailDrawerProps = {
   isOpen: boolean;
   isUpdatingStatus: boolean;
   actionError: string;
+  taxRateLabel: string;
   onClose: () => void;
   onEdit: () => void;
   onStatusChange: (status: InvoiceDetail["status"]) => void;
@@ -49,6 +50,7 @@ export function InvoiceDetailDrawer({
   isOpen,
   isUpdatingStatus,
   actionError,
+  taxRateLabel,
   onClose,
   onEdit,
   onStatusChange,
@@ -134,7 +136,7 @@ export function InvoiceDetailDrawer({
               <span className={styles.summaryValue}>{formatMinorCurrency(invoice.subtotal)}</span>
             </div>
             <div className={styles.summaryCard}>
-              <span className={styles.summaryLabel}>Tax</span>
+              <span className={styles.summaryLabel}>{`Tax (${taxRateLabel}%)`}</span>
               <span className={styles.summaryValue}>{formatMinorCurrency(invoice.taxAmount)}</span>
             </div>
             <div className={styles.summaryCard}>
