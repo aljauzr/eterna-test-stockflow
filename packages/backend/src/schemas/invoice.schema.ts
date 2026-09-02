@@ -4,6 +4,8 @@ import { Product } from "./product.schema";
 import { User } from "./user.schema";
 
 export type InvoiceDocument = HydratedDocument<Invoice>;
+export type InvoiceStatus = "DRAFT" | "ISSUED" | "PAID" | "CANCELLED";
+export const INVOICE_STATUSES: InvoiceStatus[] = ["DRAFT", "ISSUED", "PAID", "CANCELLED"];
 
 @Schema({ _id: false })
 export class InvoiceItem {
@@ -30,14 +32,23 @@ export class Invoice {
   @Prop({ type: Types.ObjectId, ref: User.name, required: true, index: true })
   ownerId!: Types.ObjectId;
 
-  @Prop({ required: true, trim: true })
+  @Prop({ required: true, trim: true, unique: true })
   invoiceNumber!: string;
 
   @Prop({ required: true, trim: true })
   customerName!: string;
 
-  @Prop({ required: true, enum: ["DRAFT", "ISSUED", "PAID", "CANCELLED"], default: "DRAFT" })
-  status!: "DRAFT" | "ISSUED" | "PAID" | "CANCELLED";
+  @Prop({ required: true })
+  issueDate!: Date;
+
+  @Prop({ required: true })
+  dueDate!: Date;
+
+  @Prop({ default: "", trim: true })
+  notes!: string;
+
+  @Prop({ required: true, enum: INVOICE_STATUSES, default: "DRAFT" })
+  status!: InvoiceStatus;
 
   @Prop({ type: [InvoiceItemSchema], default: [] })
   items!: InvoiceItem[];
@@ -53,4 +64,4 @@ export class Invoice {
 }
 
 export const InvoiceSchema = SchemaFactory.createForClass(Invoice);
-InvoiceSchema.index({ ownerId: 1, invoiceNumber: 1 }, { unique: true });
+InvoiceSchema.index({ ownerId: 1 });
