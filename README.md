@@ -50,6 +50,7 @@ NODE_ENV=development
 JWT_SECRET=stockflow-local-dev-secret-change-me
 JWT_EXPIRES_IN=1d
 NEXT_PUBLIC_APP_NAME=StockFlow
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api
 ```
 
 ## Current Auth Endpoints
@@ -58,6 +59,13 @@ NEXT_PUBLIC_APP_NAME=StockFlow
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
 - `GET /api/auth/me`
+
+## Current Frontend Auth Pages
+
+- `GET /`
+- `GET /login`
+- `GET /register`
+- `GET /dashboard`
 
 ## Current Scope Notes
 

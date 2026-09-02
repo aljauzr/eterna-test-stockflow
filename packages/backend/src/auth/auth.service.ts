@@ -39,7 +39,7 @@ export class AuthService {
     const user = await this.userModel.create({
       email,
       passwordHash,
-      workspaceName: this.resolveWorkspaceName(registerDto),
+      workspaceName: this.resolveWorkspaceName(email),
       tokenVersion: 0,
     });
 
@@ -117,17 +117,8 @@ export class AuthService {
     return this.jwtService.signAsync(payload);
   }
 
-  private resolveWorkspaceName(registerDto: RegisterDto) {
-    const trimmedWorkspaceName = registerDto.workspaceName?.trim();
-    if (trimmedWorkspaceName) {
-      return trimmedWorkspaceName;
-    }
-
-    const emailPrefix = registerDto.email.split("@")[0]?.trim();
-    if (emailPrefix) {
-      return `${emailPrefix}'s Workspace`;
-    }
-
-    return "Owner Workspace";
+  private resolveWorkspaceName(email: string) {
+    const normalizedEmail = email.trim().toLowerCase();
+    return `workspace-${normalizedEmail.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
   }
 }
