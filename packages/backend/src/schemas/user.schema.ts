@@ -13,6 +13,9 @@ export class User {
 
   @Prop({ default: "Owner Workspace" })
   workspaceName!: string;
+
+  @Prop({ default: 0 })
+  tokenVersion!: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
